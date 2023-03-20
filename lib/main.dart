@@ -34,34 +34,19 @@ class _HomePageState extends State<HomePage> {
   static const _kColumns = 20;
   static const _kRows = 35;
   static const _kSpacing = 3.0;
-  static final numberOfSquares = _kColumns * _kRows;
+  static const _numberOfSquares = _kColumns * _kRows;
 
-  static Random random = Random();
-  final FocusNode _focusNode = FocusNode();
-
-  KeyEventResult _handleKeyEvent(FocusNode node, RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-        updateDirection(Direction.up);
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        updateDirection(Direction.down);
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        updateDirection(Direction.left);
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        updateDirection(Direction.right);
-      }
-    }
-    return KeyEventResult.handled;
-  }
-
+  static final Random _random = Random();
   static final List<int> _initialSnakePosition = [45, 65, 85, 105, 125];
 
   late List<int> _snakePosition;
   late int _foodPosition;
   late Direction _direction;
 
+  final FocusNode _focusNode = FocusNode();
+
   void generateFood() {
-    _foodPosition = random.nextInt(numberOfSquares);
+    _foodPosition = _random.nextInt(_numberOfSquares);
     if (_snakePosition.contains(_foodPosition)) {
       generateFood();
     }
@@ -75,11 +60,9 @@ class _HomePageState extends State<HomePage> {
 
     generateFood();
 
-    const duration = Duration(milliseconds: 300);
+    const duration = Duration(milliseconds: 200);
     Timer.periodic(duration, (timer) {
-      updateSnake();
       // Game over: snake hit itself
-      // first value is inside the position list(minus the first value)
       final hitItself =
           _snakePosition.sublist(1).contains(_snakePosition.first);
 
@@ -95,6 +78,8 @@ class _HomePageState extends State<HomePage> {
           _snakePosition.insert(0, _snakePosition.first);
         });
       }
+
+      updateSnake();
     });
   }
 
@@ -122,12 +107,12 @@ class _HomePageState extends State<HomePage> {
         break;
       case Direction.up:
         nextPosition = _snakePosition.last - _kColumns < 0
-            ? numberOfSquares - (_kColumns - _snakePosition.last)
+            ? _numberOfSquares - (_kColumns - _snakePosition.last)
             : _snakePosition.last - _kColumns;
         break;
       case Direction.down:
-        nextPosition = _snakePosition.last + _kColumns > numberOfSquares - 1
-            ? _snakePosition.last + _kColumns - numberOfSquares
+        nextPosition = _snakePosition.last + _kColumns > _numberOfSquares - 1
+            ? _snakePosition.last + _kColumns - _numberOfSquares
             : _snakePosition.last + _kColumns;
         break;
     }
@@ -156,6 +141,21 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, RawKeyEvent event) {
+    if (event is RawKeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        updateDirection(Direction.up);
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        updateDirection(Direction.down);
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        updateDirection(Direction.left);
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        updateDirection(Direction.right);
+      }
+    }
+    return KeyEventResult.handled;
   }
 
   @override
@@ -199,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                   },
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: numberOfSquares,
+                    itemCount: _numberOfSquares,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: _kColumns,
@@ -209,10 +209,10 @@ class _HomePageState extends State<HomePage> {
                     itemBuilder: (context, index) {
                       return Container(
                           decoration: BoxDecoration(
-                        color: _foodPosition == index
-                            ? Colors.green
-                            : _snakePosition.contains(index)
-                                ? Colors.white
+                        color: _snakePosition.contains(index)
+                            ? Colors.white
+                            : _foodPosition == index
+                                ? Colors.green
                                 : Colors.grey[800],
                         borderRadius: BorderRadius.circular(5.0),
                       ));
@@ -221,7 +221,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            Padding(
+            Container(
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 'Score: ${_snakePosition.length - _initialSnakePosition.length}',
